@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -43,7 +43,7 @@ export function AccountsPage() {
       code: '',
       name: '',
       type: 'ASSET',
-      parentId: '',
+      parentId: undefined,
     },
   });
 
@@ -70,7 +70,7 @@ export function AccountsPage() {
         code: account.code,
         name: account.name,
         type: account.type as AccountFormData['type'],
-        parentId: account.parentId || '',
+        parentId: account.parentId || undefined,
       });
     } else {
       setEditingAccount(null);
@@ -78,7 +78,7 @@ export function AccountsPage() {
         code: '',
         name: '',
         type: 'ASSET',
-        parentId: '',
+        parentId: undefined,
       });
     }
     setIsDialogOpen(true);
@@ -152,6 +152,9 @@ export function AccountsPage() {
         <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingAccount ? 'Edit Account' : 'Add Account'}</DialogTitle>
+              <DialogDescription>
+                {editingAccount ? 'Update the account details below.' : 'Fill in the details to create a new account.'}
+              </DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -187,7 +190,7 @@ export function AccountsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Account Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
