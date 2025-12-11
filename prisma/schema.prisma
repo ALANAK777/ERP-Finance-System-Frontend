@@ -1,0 +1,317 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ USER MANAGEMENT ============
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  password       String
+  firstName      String
+  lastName       String
+  roleId         String
+  role           Role           @relation(fields: [roleId], references: [id])
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  auditLogs      AuditLog[]
+  journalEntries JournalEntry[]
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+}
+
+model Permission {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  roles       Role[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+// ============ FINANCE MODULE ============
+
+model Account {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String
+  type         AccountType
+  parentId     String?
+  parent       Account?      @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children     Account[]     @relation("AccountHierarchy")
+  balance      Decimal       @default(0) @db.Decimal(15, 2)
+  currency     String        @default("USD")
+  isActive     Boolean       @default(true)
+  journalLines JournalLine[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+model JournalEntry {
+  id          String      @id @default(cuid())
+  entryNumber String      @unique
+  date        DateTime
+  description String
+  status      EntryStatus @default(DRAFT)
+  createdById String
+  createdBy   User        @relation(fields: [createdById], references: [id])
+  approvedAt  DateTime?
+  lines       JournalLine[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum EntryStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model JournalLine {
+  id             String       @id @default(cuid())
+  journalEntryId String
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  accountId      String
+  account        Account      @relation(fields: [accountId], references: [id])
+  debit          Decimal      @default(0) @db.Decimal(15, 2)
+  credit         Decimal      @default(0) @db.Decimal(15, 2)
+  description    String?
+}
+
+model Vendor {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  taxId        String?
+  paymentTerms Int       @default(30)
+  isActive     Boolean   @default(true)
+  invoices     Invoice[]
+  payments     Payment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Customer {
+  id           String    @id @default(cuid())
+  code         String    @unique
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  taxId        String?
+  creditLimit  Decimal   @default(0) @db.Decimal(15, 2)
+  paymentTerms Int       @default(30)
+  isActive     Boolean   @default(true)
+  invoices     Invoice[]
+  payments     Payment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  type          InvoiceType
+  vendorId      String?
+  vendor        Vendor?       @relation(fields: [vendorId], references: [id])
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  projectId     String?
+  project       Project?      @relation(fields: [projectId], references: [id])
+  issueDate     DateTime
+  dueDate       DateTime
+  subtotal      Decimal       @db.Decimal(15, 2)
+  tax           Decimal       @default(0) @db.Decimal(15, 2)
+  total         Decimal       @db.Decimal(15, 2)
+  currency      String        @default("USD")
+  exchangeRate  Decimal       @default(1) @db.Decimal(10, 6)
+  status        InvoiceStatus @default(DRAFT)
+  items         InvoiceItem[]
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+enum InvoiceType {
+  RECEIVABLE
+  PAYABLE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal @db.Decimal(10, 2)
+  unitPrice   Decimal @db.Decimal(15, 2)
+  amount      Decimal @db.Decimal(15, 2)
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  paymentNumber String   @unique
+  invoiceId     String
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id])
+  vendorId      String?
+  vendor        Vendor?  @relation(fields: [vendorId], references: [id])
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  amount        Decimal  @db.Decimal(15, 2)
+  currency      String   @default("USD")
+  exchangeRate  Decimal  @default(1) @db.Decimal(10, 6)
+  paymentDate   DateTime
+  paymentMethod String?
+  reference     String?
+  createdAt     DateTime @default(now())
+}
+
+model ExchangeRate {
+  id            String   @id @default(cuid())
+  fromCurrency  String
+  toCurrency    String
+  rate          Decimal  @db.Decimal(10, 6)
+  effectiveDate DateTime
+  createdAt     DateTime @default(now())
+
+  @@unique([fromCurrency, toCurrency, effectiveDate])
+}
+
+// ============ PROJECT MODULE ============
+
+model Project {
+  id          String            @id @default(cuid())
+  code        String            @unique
+  name        String
+  description String?
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  budget      Decimal           @db.Decimal(15, 2)
+  actualCost  Decimal           @default(0) @db.Decimal(15, 2)
+  status      ProjectStatus     @default(PLANNING)
+  progress    ProjectProgress[]
+  invoices    Invoice[]
+  riskLogs    RiskLog[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+model ProjectProgress {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id])
+  date            DateTime
+  plannedProgress Decimal  @db.Decimal(5, 2)
+  actualProgress  Decimal  @db.Decimal(5, 2)
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
+model RiskLog {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id])
+  riskScore    Int
+  riskLevel    RiskLevel
+  factors      Json
+  calculatedAt DateTime  @default(now())
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ============ BUDGET & CASH FLOW ============
+
+model Budget {
+  id        String       @id @default(cuid())
+  name      String
+  fiscalYear Int
+  startDate DateTime
+  endDate   DateTime
+  items     BudgetItem[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model BudgetItem {
+  id       String  @id @default(cuid())
+  budgetId String
+  budget   Budget  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category String
+  planned  Decimal @db.Decimal(15, 2)
+  actual   Decimal @default(0) @db.Decimal(15, 2)
+}
+
+model CashFlow {
+  id          String       @id @default(cuid())
+  date        DateTime
+  type        CashFlowType
+  category    String
+  amount      Decimal      @db.Decimal(15, 2)
+  description String?
+  createdAt   DateTime     @default(now())
+}
+
+enum CashFlowType {
+  INFLOW
+  OUTFLOW
+}
