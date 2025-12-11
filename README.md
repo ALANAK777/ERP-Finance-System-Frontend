@@ -1,6 +1,6 @@
 # AI-ERP Finance System - Frontend
 
-![Landing Page](./docs/landing-page.png)
+![Landing Page](./public/landing-page.png)
 
 A modern, AI-powered ERP Finance System designed specifically for the construction industry. This is the frontend application built with React, TypeScript, and Tailwind CSS.
 
