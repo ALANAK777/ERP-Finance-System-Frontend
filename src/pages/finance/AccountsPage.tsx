@@ -211,14 +211,17 @@ export function AccountsPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Parent Account (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select 
+                        onValueChange={(value) => field.onChange(value === "none" ? "" : value)} 
+                        value={field.value || "none"}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select parent account" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {accounts.map((account) => (
                             <SelectItem key={account.id} value={account.id}>
                               {account.code} - {account.name}
