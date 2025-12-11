@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -142,14 +142,14 @@ export function AccountsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Chart of Accounts</h1>
           <p className="text-muted-foreground">Manage your chart of accounts</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Account
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <Button onClick={() => handleOpenDialog()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Account
+        </Button>
+      </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingAccount ? 'Edit Account' : 'Add Account'}</DialogTitle>
             </DialogHeader>
@@ -242,7 +242,6 @@ export function AccountsPage() {
             </Form>
           </DialogContent>
         </Dialog>
-      </div>
 
       <Card>
         <CardHeader>
