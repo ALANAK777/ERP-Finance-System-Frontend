@@ -1,27 +1,15 @@
 # Dependencies
 node_modules/
 
+# Build output
+dist/
+dist-ssr/
+
 # Environment variables
 .env
 .env.local
 .env.*.local
-
-# Build output
-dist/
-
-# Prisma
-prisma/*.db
-prisma/*.db-journal
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
+*.local
 
 # Logs
 logs/
@@ -29,6 +17,24 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Test coverage
 coverage/
@@ -37,6 +43,3 @@ coverage/
 *.tmp
 *.temp
 .cache/
-
-# Fix scripts (development only)
-prisma/fix-*.ts
